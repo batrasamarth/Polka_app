@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<style name="Theme.Scrumptious" parent="@android:style/Theme.Holo.Light.DarkActionBar">>
+	<style name="Theme.Scrumptious" parent="@style/Theme.AppCompat.Light">>
 
          <item name="android:actionBarStyle">@style/MyActionBar</item> 
     </style>
 	<style name="MyActionBar"
-           parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+           parent="@android:style/Widget.Holo.Light.ActionBar.Solid">
       
     </style>
+     
 </resources>
 

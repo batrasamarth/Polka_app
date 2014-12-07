@@ -32,8 +32,10 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.widget.Toast;
 import com.facebook.FacebookException;
+import com.facebook.model.GraphUser;
 import com.facebook.widget.FriendPickerFragment;
 import com.facebook.widget.PickerFragment;
+import com.facebook.widget.PickerFragment.GraphObjectFilter;
 import com.facebook.widget.PlacePickerFragment;
 
 /**
@@ -70,26 +72,42 @@ public class PickerActivity extends FragmentActivity {
         Uri intentUri = getIntent().getData();
 
         if (FRIEND_PICKER.equals(intentUri)) {
-            if (savedInstanceState == null) {
-                friendPickerFragment = new FriendPickerFragment(args);
-                friendPickerFragment.setFriendPickerType(FriendPickerFragment.FriendPickerType.TAGGABLE_FRIENDS);
-            } else {
-                friendPickerFragment = (FriendPickerFragment) manager.findFragmentById(R.id.picker_fragment);;
-            }
+        	  if (savedInstanceState == null) {
+                  friendPickerFragment = new FriendPickerFragment(args);
+                  friendPickerFragment.setFriendPickerType(FriendPickerFragment.FriendPickerType.FRIENDS);
+              } else {
+                  friendPickerFragment = (FriendPickerFragment) manager.findFragmentById(R.id.picker_fragment);;
+              }
+        	  /*
+        	  //Checks which of the friends have the same app installed
+        	  friendPickerFragment.setFilter(new GraphObjectFilter<GraphUser>(){
 
-            friendPickerFragment.setOnErrorListener(new PickerFragment.OnErrorListener() {
-                @Override
-                public void onError(PickerFragment<?> fragment, FacebookException error) {
-                    PickerActivity.this.onError(error);
-                }
-            });
-            friendPickerFragment.setOnDoneButtonClickedListener(new PickerFragment.OnDoneButtonClickedListener() {
-                @Override
-                public void onDoneButtonClicked(PickerFragment<?> fragment) {
-                    finishActivity();
-                }
-            });
-            fragmentToShow = friendPickerFragment;
+				@Override
+				public boolean includeItem(GraphUser graphObject) {
+					if(graphObject.asMap().containsKey("installed") && (Boolean) graphObject.asMap().get("installed"))
+		                return true; 
+		            else
+		                return true; 
+		            
+				}
+        		  
+        	  });
+        	  */
+              friendPickerFragment.setOnErrorListener(new PickerFragment.OnErrorListener() {
+                  @Override
+                  public void onError(PickerFragment<?> fragment, FacebookException error) {
+                      PickerActivity.this.onError(error);
+                  }
+              });
+              
+              friendPickerFragment.setOnDoneButtonClickedListener(new PickerFragment.OnDoneButtonClickedListener() {
+                  @Override
+                  public void onDoneButtonClicked(PickerFragment<?> fragment) {
+                      finishActivity();
+                  }
+              });
+            
+              fragmentToShow = friendPickerFragment;
 
         } else if (PLACE_PICKER.equals(intentUri)) {
             if (savedInstanceState == null) {

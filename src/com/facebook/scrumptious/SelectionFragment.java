@@ -43,6 +43,7 @@ import com.facebook.*;
 import com.facebook.internal.Utility;
 import com.facebook.model.*;
 import com.facebook.widget.FacebookDialog;
+import com.facebook.widget.FriendPickerFragment;
 import com.facebook.widget.ProfilePictureView;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -650,6 +651,7 @@ public class SelectionFragment extends Fragment {
         Intent intent = new Intent();
         intent.setData(data);
         intent.setClass(getActivity(), PickerActivity.class);
+        //intent.putExtra(FriendPickerFragment.EXTRA_FIELDS_BUNDLE_KEY, "installed");
         startActivityForResult(intent, requestCode);
     }
 
@@ -934,9 +936,9 @@ public class SelectionFragment extends Fragment {
     private class LocationListElement extends BaseListElement {
 
         private static final String PLACE_KEY = "place";
-
+        private AlertDialog dialog;
         private String title = "Enter poll caption!";
-        private EditText input = new EditText(getActivity());
+        
         public LocationListElement(int requestCode) {
             super(getActivity().getResources().getDrawable(R.drawable.add_location),
                     getActivity().getResources().getString(R.string.action_location),
@@ -946,10 +948,13 @@ public class SelectionFragment extends Fragment {
 
         @Override
         protected View.OnClickListener getOnClickListener() {
-            return new View.OnClickListener() {
+        	return new View.OnClickListener() {
+            	
                 @Override
                 public void onClick(View view) {
-                	 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                	final EditText input =   new EditText(getActivity());
+                    
+                	AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                      builder.setTitle(title)
                              .setCancelable(true)
                              .setView(input)
@@ -959,6 +964,7 @@ public class SelectionFragment extends Fragment {
                                      String foodChoice = input.getText().toString();
                                      setPlaceText(foodChoice);
                                      notifyDataChanged();
+                                     
                                  }
                              })
                              .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -966,10 +972,11 @@ public class SelectionFragment extends Fragment {
                                  public void onClick(DialogInterface dialogInterface, int i) {
                                  }
                              });
-                     AlertDialog dialog = builder.create();
+                     dialog = builder.create();
                      // always popup the keyboard when the alert dialog shows
                      dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
                      dialog.show();
+                    
                 }
             };
         }
@@ -997,6 +1004,7 @@ public class SelectionFragment extends Fragment {
                 key = getResources().getString(R.string.action_location_default);
             }
             setText2(key);
+            dialog.dismiss();
         }
 
     }
@@ -1138,7 +1146,7 @@ public class SelectionFragment extends Fragment {
             if (view == null) {
                 LayoutInflater inflater =
                         (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.listitem, null);
+                view = inflater.inflate(R.layout.listitem, null,false);
             }
 
             BaseListElement listElement = listElements.get(position);
