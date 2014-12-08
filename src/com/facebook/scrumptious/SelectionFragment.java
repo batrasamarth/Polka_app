@@ -19,16 +19,19 @@ package com.facebook.scrumptious;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -45,6 +48,8 @@ import com.facebook.model.*;
 import com.facebook.widget.FacebookDialog;
 import com.facebook.widget.FriendPickerFragment;
 import com.facebook.widget.ProfilePictureView;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -687,10 +692,12 @@ public class SelectionFragment extends Fragment {
         private static final String FOOD_URL_KEY = "food_url";
 
         private final String[] foodChoices;
+        private ArrayList<String> foodChoices_;
+        private ArrayList<String> customFoodChoices_;
         private final String[] foodUrls;
         private String foodChoiceUrl = null;
         private String foodChoice = null;
-
+        private ArrayList<Integer> mSelectedItems;
         public EatListElement(int requestCode) {
             super(getActivity().getResources().getDrawable(R.drawable.add_food),
                     getActivity().getResources().getString(R.string.action_eating),
@@ -750,12 +757,22 @@ public class SelectionFragment extends Fragment {
         }
 
         private void showMealOptions() {
-            String title = getActivity().getResources().getString(R.string.select_meal);
+        	foodChoices_ = new ArrayList<String>();
+        	for(String s :foodChoices){
+        		foodChoices_.add(s);
+        	}
+        	customFoodChoices_ = getStringArrayPref(getActivity(),"customFood");
+        	for(String s: customFoodChoices_){
+        		foodChoices_.add(s);
+        	}
+            mSelectedItems =  new ArrayList<Integer>();
+        	String title = getActivity().getResources().getString(R.string.select_meal);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(title).
                     setCancelable(true).
-                    setItems(foodChoices, new DialogInterface.OnClickListener() {
-                        @Override
+                    setMultiChoiceItems(foodChoices_.toArray(new String[foodChoices_.size()]),null, new DialogInterface.OnMultiChoiceClickListener() {
+                       /*
+                    	@Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             foodChoiceUrl = foodUrls[i];
                             if (i== getResources().getStringArray(R.array.food_types).length -1) {
@@ -766,8 +783,40 @@ public class SelectionFragment extends Fragment {
                                 notifyDataChanged();
                             }
                         }
-                    });
+						*/
+						@Override
+						public void onClick(DialogInterface dialog, int which,
+								boolean isChecked) {
+							if(isChecked){
+								mSelectedItems.add(which);
+								if(which==0){
+									getCustomFood();
+									dialog.cancel();
+								}
+							}
+							else{
+								mSelectedItems.remove(Integer.valueOf(which));
+							}
+							
+						}
+                    }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+						
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							setFoodText();
+							notifyDataChanged();							
+						}
+					}).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+						
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							mSelectedItems =  new ArrayList<Integer>();
+							setFoodText();
+						}
+					});
             builder.show();
+            
+            
         }
 
         private void getCustomFood() {
@@ -781,9 +830,19 @@ public class SelectionFragment extends Fragment {
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            foodChoice = input.getText().toString();
-                            setFoodText();
+                            //foodChoice = input.getText().toString();
+                            //setFoodText();
+                        	if(!(customFoodChoices_.contains(input.getText().toString()))){
+                        		customFoodChoices_.add(input.getText().toString());
+                            	setStringArrayPref(getActivity(), "customFood",customFoodChoices_);
+                                
+                        	}
+                        	else{
+                        		Toast.makeText(getActivity(), R.string.already_exists, Toast.LENGTH_SHORT).show();
+                        	}
+                        	//foodChoices[foodChoices.length-1] = input.getText().toString();
                             notifyDataChanged();
+                            
                         }
                     })
                     .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -798,6 +857,22 @@ public class SelectionFragment extends Fragment {
         }
 
         private void setFoodText() {
+        	String selectedOptions = "";
+        	if(mSelectedItems.size()>0){
+        		for(int s: mSelectedItems){
+        			selectedOptions = selectedOptions + foodChoices_.get(s)  +", ";
+        		}
+        		setText2(selectedOptions);
+        		announceButton.setEnabled(true);
+        		messageButton.setEnabled(true);
+        	}
+        	else{
+        		setText2(getActivity().getResources().getString(R.string.action_eating_default));
+                announceButton.setEnabled(false);
+                messageButton.setEnabled(false);
+        	}
+        	
+        	/*
             if (foodChoice != null && foodChoice.length() > 0) {
                 setText2(foodChoice);
                 announceButton.setEnabled(true);
@@ -807,6 +882,7 @@ public class SelectionFragment extends Fragment {
                 announceButton.setEnabled(false);
                 messageButton.setEnabled(false);
             }
+            */
         }
     }
 
@@ -1173,5 +1249,38 @@ public class SelectionFragment extends Fragment {
             return view;
         }
 
+    }
+    
+    public static ArrayList<String> getStringArrayPref(Context context, String key) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String json = prefs.getString(key, null);
+        ArrayList<String> urls = new ArrayList<String>();
+        if (json != null) {
+            try {
+                JSONArray a = new JSONArray(json);
+                for (int i = 0; i < a.length(); i++) {
+                    String url = a.optString(i);
+                    urls.add(url);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return urls;
+    }
+    
+    public static void setStringArrayPref(Context context, String key, ArrayList<String> values) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        JSONArray a = new JSONArray();
+        for (int i = 0; i < values.size(); i++) {
+            a.put(values.get(i));
+        }
+        if (!values.isEmpty()) {
+            editor.putString(key, a.toString());
+        } else {
+            editor.putString(key, null);
+        }
+        editor.commit();
     }
 }

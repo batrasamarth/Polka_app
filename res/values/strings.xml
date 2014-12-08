@@ -35,6 +35,7 @@
     <string name="message">Send with Messenger</string>
     <string name="login">Login</string>
     <string name="settings">Log Out</string>
+    <string name="already_exists">Response option already exists!</string>
     <string name="select_meal">Select the responses</string>
     <string name="enter_meal">Enter custom option</string>
     <string name="result_dialog_title">Result</string>
@@ -64,11 +65,11 @@
     <string name="activity_tab">Activity</string>
 	
     <string-array name="food_types">
-        <item>Wallet</item>
-        <item>Keys</item>
-        <item>Dog Tag</item>
-        <item>Backpack</item>
-        <item>&lt;Other&gt;</item>
+        <item>&lt;Add other option&gt;</item>
+        <item>Yes!</item>
+        <item>No!</item>
+        <item>True!</item>
+        <item>False!</item>
     </string-array>
 
     <string-array name="food_og_urls">
