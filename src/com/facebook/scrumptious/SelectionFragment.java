@@ -832,7 +832,7 @@ public class SelectionFragment extends Fragment {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             //foodChoice = input.getText().toString();
                             //setFoodText();
-                        	if(!(customFoodChoices_.contains(input.getText().toString()))){
+                        	if(!(foodChoices_.contains(input.getText().toString()))){
                         		customFoodChoices_.add(input.getText().toString());
                             	setStringArrayPref(getActivity(), "customFood",customFoodChoices_);
                                 

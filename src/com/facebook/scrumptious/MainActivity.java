@@ -77,8 +77,8 @@ public class MainActivity extends ActionBarActivity implements TabListener {
 
         setContentView(R.layout.main);
        
-        enableActionBar();
-        getActionBar().show();
+       
+        //getActionBar().show();
         
         FragmentManager fm = getSupportFragmentManager();
         SplashFragment splashFragment = (SplashFragment) fm.findFragmentById(R.id.splashFragment);
@@ -97,6 +97,7 @@ public class MainActivity extends ActionBarActivity implements TabListener {
             public void onSkipLoginPressed() {
                 userSkippedLogin = true;
                 showFragment(SELECTION, false);
+                enableActionBar();
                 getActionBar().show();
             }
         });
@@ -154,11 +155,12 @@ public class MainActivity extends ActionBarActivity implements TabListener {
         if (session != null && session.isOpened()) {
             // if the session is already open, try to show the selection fragment
             showFragment(SELECTION, false);
+          
             userSkippedLogin = false;
             getActionBar().show();
          
         } else if (userSkippedLogin) {
-            showFragment(SELECTION, false);
+        	showFragment(SELECTION, false);
             getActionBar().show();
             
         } else {
@@ -175,11 +177,11 @@ public class MainActivity extends ActionBarActivity implements TabListener {
      	tab1.setText(R.string.home_tab);
      	tab1.setTabListener(new TabListener<SelectionFragment>(this,"main" , SelectionFragment.class) );
      	//tab1.setTabListener(new MyTabListener());
-     	
+     	//tab1.setTabListener(this);
      	ActionBar.Tab tab2 = actionBar.newTab();
      	tab2.setText(R.string.activity_tab);
      	tab2.setTabListener(new TabListener<FriendsFragment>(this, "friends", FriendsFragment.class));
-     	
+     	//tab2.setTabListener(this);
      	actionBar.addTab(tab1); actionBar.addTab(tab2);
      	
     }
@@ -224,6 +226,7 @@ public class MainActivity extends ActionBarActivity implements TabListener {
             // OPENED_TOKEN_UPDATED state, the selection fragment should already be showing.
             if (state.equals(SessionState.OPENED)) {
                 showFragment(SELECTION, false);
+                enableActionBar();
                 getActionBar().show();
             } else if (state.isClosed()) {
                 showFragment(SPLASH, false);
