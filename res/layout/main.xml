@@ -40,6 +40,10 @@
               android:id="@+id/userSettingsFragment"
               android:layout_width="match_parent"
               android:layout_height="match_parent" />
+    <fragment android:name="com.facebook.scrumptious.FriendsFragment"
+              android:id="@+id/FriendsFragment"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent" />
 	</FrameLayout>
 </LinearLayout>
 

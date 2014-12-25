@@ -1563,6 +1563,7 @@ containing a value of this type.
         public static final int title_bar_logo=0x7f0200ab;
     }
     public static final class id {
+        public static final int FriendsFragment=0x7f05006a;
         public static final int action_bar=0x7f05002a;
         public static final int action_bar_activity_content=0x7f050015;
         public static final int action_bar_container=0x7f050029;
@@ -1576,7 +1577,7 @@ containing a value of this type.
         public static final int action_mode_close_button=0x7f050032;
         public static final int activity_chooser_view_content=0x7f050033;
         public static final int always=0x7f05000b;
-        public static final int announce_text=0x7f05006f;
+        public static final int announce_text=0x7f050070;
         public static final int beginning=0x7f050011;
         public static final int bottom=0x7f050022;
         public static final int box_count=0x7f050021;
@@ -1624,19 +1625,19 @@ containing a value of this type.
         public static final int icon=0x7f050038;
         public static final int ifRoom=0x7f05000a;
         public static final int image=0x7f050035;
-        public static final int image_title=0x7f05006b;
+        public static final int image_title=0x7f05006c;
         public static final int inline=0x7f050023;
         public static final int large=0x7f05001e;
         public static final int left=0x7f050026;
         public static final int listMode=0x7f050001;
         public static final int list_item=0x7f050037;
-        public static final int login_button=0x7f050071;
-        public static final int message_text=0x7f050070;
+        public static final int login_button=0x7f050072;
+        public static final int message_text=0x7f050071;
         public static final int middle=0x7f050012;
         public static final int never=0x7f050009;
         public static final int none=0x7f050010;
         public static final int normal=0x7f050000;
-        public static final int picker_fragment=0x7f05006a;
+        public static final int picker_fragment=0x7f05006b;
         public static final int picker_subtitle=0x7f050059;
         public static final int progress_circular=0x7f050018;
         public static final int progress_horizontal=0x7f050019;
@@ -1653,15 +1654,14 @@ containing a value of this type.
         public static final int search_plate=0x7f050044;
         public static final int search_src_text=0x7f050045;
         public static final int search_voice_btn=0x7f050049;
-        public static final int selected_image=0x7f05006e;
+        public static final int selected_image=0x7f05006f;
         public static final int selectionFragment=0x7f050067;
-        public static final int selection_list=0x7f05006d;
-        public static final int selection_profile_pic=0x7f05006c;
+        public static final int selection_list=0x7f05006e;
+        public static final int selection_profile_pic=0x7f05006d;
         public static final int shortcut=0x7f05003c;
         public static final int showCustom=0x7f050007;
         public static final int showHome=0x7f050004;
         public static final int showTitle=0x7f050006;
-        public static final int skip_login_button=0x7f050072;
         public static final int small=0x7f05001d;
         public static final int splashFragment=0x7f050068;
         public static final int split_action_bar=0x7f05002c;
@@ -1745,13 +1745,14 @@ containing a value of this type.
         public static final int com_facebook_search_bar_layout=0x7f030024;
         public static final int com_facebook_tooltip_bubble=0x7f030025;
         public static final int com_facebook_usersettingsfragment=0x7f030026;
-        public static final int friends=0x7f030027;
-        public static final int listitem=0x7f030028;
-        public static final int main=0x7f030029;
-        public static final int pickers=0x7f03002a;
-        public static final int selection=0x7f03002b;
-        public static final int splash=0x7f03002c;
-        public static final int support_simple_spinner_dropdown_item=0x7f03002d;
+        public static final int dummy=0x7f030027;
+        public static final int friends=0x7f030028;
+        public static final int listitem=0x7f030029;
+        public static final int main=0x7f03002a;
+        public static final int pickers=0x7f03002b;
+        public static final int selection=0x7f03002c;
+        public static final int splash=0x7f03002d;
+        public static final int support_simple_spinner_dropdown_item=0x7f03002e;
     }
     public static final class string {
         /**  Content description for the action bar "home" affordance. [CHAR LIMIT=NONE] 
