@@ -37,6 +37,7 @@ import com.facebook.widget.FriendPickerFragment;
 import com.facebook.widget.PickerFragment;
 import com.facebook.widget.PickerFragment.GraphObjectFilter;
 import com.facebook.widget.PlacePickerFragment;
+import com.polka.polkaclient.R;
 
 /**
  * The PickerActivity enhances the Friend or Place Picker by adding a title

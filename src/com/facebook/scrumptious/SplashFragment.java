@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.facebook.widget.LoginButton;
+import com.polka.polkaclient.R;
 
 public class SplashFragment extends Fragment {
 	
@@ -36,7 +37,7 @@ public class SplashFragment extends Fragment {
         View view = inflater.inflate(R.layout.splash, container, false);
         
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
-        loginButton.setReadPermissions("user_friends", "user_location");
+        loginButton.setReadPermissions("user_friends", "user_location","email");
 
         return view;
     }

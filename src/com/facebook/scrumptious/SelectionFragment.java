@@ -26,6 +26,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.AvoidXfermode.Mode;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -48,7 +49,18 @@ import com.facebook.model.*;
 import com.facebook.widget.FacebookDialog;
 import com.facebook.widget.FriendPickerFragment;
 import com.facebook.widget.ProfilePictureView;
+import com.polka.polkaclient.R;
 
+import org.apache.harmony.javax.security.sasl.SaslException;
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.SmackAndroid;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.proxy.ProxyInfo;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,6 +75,11 @@ import java.util.List;
  */
 public class SelectionFragment extends Fragment {
 
+	private static final String LOGINPREFS = "login_preferences";
+	private static final String IP_ADDR ="54.69.228.44";
+	private static final int PORT = 5222;
+	private static final String IP_DNS ="ec2-54-69-228-44.us-west-2.compute.amazonaws.com";
+	
     private static final String TAG = "SelectionFragment";
     private static final String MEAL_OBJECT_TYPE = "fb_sample_scrumps:meal";
     private static final String EAT_ACTION_TYPE = "fb_sample_scrumps:eat";
@@ -76,8 +93,10 @@ public class SelectionFragment extends Fragment {
     private static final int REAUTH_ACTIVITY_CODE = 100;
     private static final String PERMISSION = "publish_actions";
 
+    private ConnectionConfiguration config;
+    private XMPPConnection XmppConnection;
+    
     private TextView announceButton;
-    private TextView messageButton;
     private ListView listView;
     private ProgressDialog progressDialog;
     private List<BaseListElement> listElements;
@@ -86,7 +105,15 @@ public class SelectionFragment extends Fragment {
     private MainActivity activity;
     private Uri photoUri;
     private ImageView photoThumbnail;
-
+    
+    private EatListElement pollOptionElement;
+    private LocationListElement pollCaptionElement;
+    private PeopleListElement peopleListElement;
+    private PhotoListElement photoListElement;
+    
+    
+    
+    
     private UiLifecycleHelper uiHelper;
     private Session.StatusCallback sessionCallback = new Session.StatusCallback() {
         @Override
@@ -130,6 +157,8 @@ public class SelectionFragment extends Fragment {
         activity = (MainActivity) getActivity();
         uiHelper = new UiLifecycleHelper(getActivity(), sessionCallback);
         uiHelper.onCreate(savedInstanceState);
+       
+        
     }
 
     @Override
@@ -145,27 +174,21 @@ public class SelectionFragment extends Fragment {
         profilePictureView = (ProfilePictureView) view.findViewById(R.id.selection_profile_pic);
         profilePictureView.setCropped(true);
         announceButton = (TextView) view.findViewById(R.id.announce_text);
-        messageButton = (TextView) view.findViewById(R.id.message_text);
         listView = (ListView) view.findViewById(R.id.selection_list);
         photoThumbnail = (ImageView) view.findViewById(R.id.selected_image);
         //If facebook messenger is installed on device, make send with messenger button visible
+        /*
         if (FacebookDialog.canPresentOpenGraphMessageDialog(activity)) {
             messageButton.setVisibility(View.VISIBLE);
         }
-
+		*/
         announceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handleAnnounce(false);
+                handleAnnounce();
             }
         });
-        messageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                handleAnnounce(true);
-            }
-        });
-
+        
         init(savedInstanceState);
 
         return view;
@@ -209,7 +232,7 @@ public class SelectionFragment extends Fragment {
      */
     private void tokenUpdated() {
         if (pendingAnnounce) {
-            handleAnnounce(false);
+            handleAnnounce();
         }
     }
 
@@ -248,14 +271,18 @@ public class SelectionFragment extends Fragment {
      */
     private void init(Bundle savedInstanceState) {
         announceButton.setEnabled(false);
-        messageButton.setEnabled(false);
-
+        
         listElements = new ArrayList<BaseListElement>();
 
-        listElements.add(new EatListElement(0));
-        listElements.add(new LocationListElement(1));
-        listElements.add(new PeopleListElement(2));
-        listElements.add(new PhotoListElement(3));
+        pollOptionElement = new EatListElement(0);
+        pollCaptionElement = new LocationListElement(1);
+        peopleListElement = new PeopleListElement(2);
+        photoListElement  = new PhotoListElement(3);
+        
+        listElements.add(pollOptionElement);
+        listElements.add(pollCaptionElement);
+        listElements.add(peopleListElement);
+        listElements.add(photoListElement);
 
         if (savedInstanceState != null) {
             for (BaseListElement listElement : listElements) {
@@ -272,23 +299,103 @@ public class SelectionFragment extends Fragment {
         }
     }
 
-    private void handleAnnounce(boolean isMessage) {
+    private void handleAnnounce() {
         pendingAnnounce = false;
         Session session = Session.getActiveSession();
-
-        // if we have a session, then use the graph API to directly publish, otherwise use
-        // the native open graph share dialog.
+        sendMessage();
         if (session != null && session.isOpened()) {
-            handleGraphApiAnnounce();
-        } else {
-            if (isMessage) {
-                handleNativeMessageAnnounce();
-            } else {
-                handleNativeShareAnnounce();
-            }
+            //handleGraphApiAnnounce();
+        }
+        else {
+        
+            //handleNativeMessageAnnounce();
+            //handleNativeShareAnnounce();
+        
         }
     }
+    
+   
+    
+    private void sendMessage(){
+    	Thread t= new Thread(new Runnable(){
 
+			@Override
+			public void run() {
+				Context context = getActivity().getApplicationContext();
+				SmackAndroid.init(context);
+				config = new ConnectionConfiguration(IP_ADDR,PORT,
+						IP_DNS,
+						ProxyInfo.forDefaultProxy());
+		        config.setDebuggerEnabled(true);
+		        config.setSecurityMode(SecurityMode.disabled);
+		        XmppConnection = new XMPPTCPConnection(config);
+
+	            System.setProperty("smack.debugEnabled", "true");
+	            SharedPreferences loginPrefs= getActivity().getSharedPreferences(LOGINPREFS,0);
+	            String username = loginPrefs.getString("username", "");
+	            String password = loginPrefs.getString("password","");
+
+	            
+	            try {
+	            	if(!XmppConnection.isConnected()){
+		            	XmppConnection.connect();
+		    			XmppConnection.login(username, password);
+		    		
+	            	}
+		    		Message msg  = new Message("polka-app@appspot.com", Message.Type.chat);
+	    			msg.setThread("first");
+	    			JSONArray pollData = getJSONPollData();
+	    			msg.setBody(pollData.toString());
+	    			XmppConnection.sendPacket(msg);
+	            } catch (SaslException e) {
+	    			Log.d("Xmpp login Exception","SaslException@HandleAnnounce");
+	    			e.printStackTrace();
+	    		} catch (XMPPException e) {
+	    			Log.d("Xmpp login exception", "XMPPException@handleAnnounce");
+	    			e.printStackTrace();
+	    		} catch (SmackException e) {
+	    			Log.d("Xmpp login exception", "SmackException@handleAnnounce");
+	    			e.printStackTrace();
+	    		} catch (IOException e) {
+	    			Log.d("Xmpp login exception", "IOException@handleAnnounce");
+	    			e.printStackTrace();
+	    		}
+				
+			}
+    		
+    	});
+    	t.start();
+    }
+    
+    private JSONArray getJSONPollData(){
+    	JSONArray completePollData = new JSONArray();
+    	JSONObject pollOptionsData = new JSONObject();
+    	JSONArray pollOptionsArray = new JSONArray();
+    	JSONObject friendsIdsData = new JSONObject();
+    	JSONArray friendsIdsArray = new JSONArray();
+    	JSONObject pollCaptionObject =  new JSONObject();
+    	try {
+    		for(String s: pollOptionElement.getSelectedOptions()){
+    			pollOptionsArray.put(s);
+    		}
+    		pollOptionsData.put("options", pollOptionsArray);
+			
+    		for(String ids: peopleListElement.getSectedUserIds()){
+    			friendsIdsArray.put(ids);
+    		}
+    		friendsIdsData.put("people", friendsIdsArray);
+    		pollCaptionObject.put("caption", pollCaptionElement.getPollCaption());
+    		
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+    	
+    	completePollData.put(pollOptionsData);
+    	completePollData.put(friendsIdsData);
+    	completePollData.put(pollCaptionObject);
+    	return completePollData;
+    }
+    
     private void handleGraphApiAnnounce() {
         Session session = Session.getActiveSession();
 
@@ -716,6 +823,14 @@ public class SelectionFragment extends Fragment {
                 }
             };
         }
+        
+        public ArrayList<String> getSelectedOptions(){
+        	ArrayList<String> selectedPollOptions = new ArrayList<String>();
+        	for(int s: mSelectedItems){
+    			selectedPollOptions.add(foodChoices_.get(s));
+    		}
+        	return selectedPollOptions;
+        }
 
         @Override
         protected void populateOGAction(OpenGraphAction action) {
@@ -864,13 +979,11 @@ public class SelectionFragment extends Fragment {
         		}
         		setText2(selectedOptions);
         		announceButton.setEnabled(true);
-        		messageButton.setEnabled(true);
         	}
         	else{
         		setText2(getActivity().getResources().getString(R.string.action_eating_default));
                 announceButton.setEnabled(false);
-                messageButton.setEnabled(false);
-        	}
+            }
         	
         	/*
             if (foodChoice != null && foodChoice.length() > 0) {
@@ -944,6 +1057,15 @@ public class SelectionFragment extends Fragment {
                 return true;
             }
             return false;
+        }
+        
+        public ArrayList<String> getSectedUserIds(){
+        	
+        	ArrayList<String> selectedUserIds = new ArrayList<String>();
+        	for(GraphUser fbUser: selectedUsers){
+        		selectedUserIds.add(fbUser.getId());
+        	}
+        	return selectedUserIds;
         }
 
         private void setUsersText() {
@@ -1021,7 +1143,7 @@ public class SelectionFragment extends Fragment {
                     null,
                     requestCode);
         }
-
+        
         @Override
         protected View.OnClickListener getOnClickListener() {
         	return new View.OnClickListener() {
@@ -1057,6 +1179,9 @@ public class SelectionFragment extends Fragment {
             };
         }
 
+        public String getPollCaption(){
+        	return title;
+        }
         @Override
         protected void onActivityResult(Intent data) {
           

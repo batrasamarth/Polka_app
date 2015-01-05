@@ -483,8 +483,7 @@ int id large 0x7f05001e
 int id left 0x7f050026
 int id listMode 0x7f050001
 int id list_item 0x7f050037
-int id login_button 0x7f050072
-int id message_text 0x7f050071
+int id login_button 0x7f050071
 int id middle 0x7f050012
 int id never 0x7f050009
 int id none 0x7f050010

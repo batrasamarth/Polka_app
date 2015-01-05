@@ -36,7 +36,10 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -47,10 +50,16 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
 import com.facebook.AppEventsLogger;
+import com.facebook.Request;
+import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphUser;
+import com.polka.polkaclient.R;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -61,17 +70,19 @@ public class MainActivity extends ActionBarActivity {
     private static final int SETTINGS = 2;
     private static final int FRIENDS = 3;
     private static final int FRAGMENT_COUNT = FRIENDS +1;
+    private static final String LOGINPREFS = "login_preferences";
 
     
-    ConnectionConfiguration config;
-    XMPPConnection connection;
-    AccountManager am;
+    private ConnectionConfiguration config;
+    private XMPPConnection connection;
+    private AccountManager am;
     
     private ActionBar actionBar;
     private Fragment[] fragments = new Fragment[FRAGMENT_COUNT];
     private MenuItem settings;
     private boolean isResumed = false;
     private UiLifecycleHelper uiHelper;
+    
     private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
         public void call(Session session, SessionState state, Exception exception) {
@@ -157,7 +168,7 @@ public class MainActivity extends ActionBarActivity {
         	}
         	getSupportActionBar().show();
             Log.d("XMPP-send","in onResume()");
-        	sendMessage();
+        	
             // if the session is already open, try to show the selection fragment
             showFragment(SELECTION, false);
         } 
@@ -215,7 +226,32 @@ public class MainActivity extends ActionBarActivity {
                 showFragment(SELECTION, false);
                 Context context = getApplicationContext();
                 SmackAndroid.init(context);
-                connectToServer();
+                final SharedPreferences loginPrefs = getSharedPreferences(LOGINPREFS, MODE_PRIVATE);
+                
+                Request.executeMeRequestAsync(session,new Request.GraphUserCallback() {
+					
+					@Override
+					public void onCompleted(GraphUser user, Response response) {
+						// TODO Auto-generated method stub
+						if(loginPrefs.getString("username", "").equals(user.getId())){
+							Toast.makeText(getApplicationContext(), "Welcome again!", 
+									Toast.LENGTH_LONG).show();
+						}
+						else{
+							Toast.makeText(getApplicationContext(), user.getFirstName()+" "+
+									user.getId()+" "+user.getProperty("email")
+									+"hh "+loginPrefs.getString("username",""),
+									Toast.LENGTH_SHORT).show();
+							String facebook_id = user.getId();
+							String first_name = user.getFirstName();
+							String email_address = (String) user.getProperty("email");
+							String name = user.getName();
+							registerOnXMPPServer(facebook_id, first_name, 
+									email_address,name,getApplicationContext());				
+						}
+					}
+				});
+            
                 
             } else if (state.isClosed()) {
                 showFragment(SPLASH, false);
@@ -254,7 +290,7 @@ public class MainActivity extends ActionBarActivity {
     				else{
     					Log.d("XMPP-connect","connection.isConnected");
     				}
-    				Chat chat = ChatManager.getInstanceFor(connection).createChat("pioneersamarth@gmail.com", new MessageListener() {
+    				Chat chat = ChatManager.getInstanceFor(connection).createChat("polka-app@appspot.com", new MessageListener() {
 					     public void processMessage(Chat chat, Message message) {
 					         // Print out any messages we get back to standard out.
 					         System.out.println("Received message: " + message);
@@ -271,7 +307,9 @@ public class MainActivity extends ActionBarActivity {
     	t.start();
     }
     
-    public void connectToServer(){
+    public void registerOnXMPPServer(final String id, final String firstName, 
+    		final String email, final String fullName,final Context context){
+    	
     	Thread t = new Thread(new Runnable(){
     		@Override
     		public void run(){
@@ -288,11 +326,17 @@ public class MainActivity extends ActionBarActivity {
 					connection.connect();
 					Log.d("XMPP","Connection success!");
 					HashMap<String,String> attributes = new HashMap<String,String>();
-					attributes.put("username", "sample");
-					attributes.put("password", "my_password");
-					attributes.put("email", "foo@foo.com");
-					attributes.put("name", "Sample Batra");
-					am.createAccount("sample", "my_password", attributes);
+					attributes.put("username", id);
+					attributes.put("password", id+firstName);
+					attributes.put("email", email);
+					attributes.put("name", fullName );
+					SharedPreferences loginPrefs = getSharedPreferences(LOGINPREFS, MODE_PRIVATE);
+			    	Editor editor = loginPrefs.edit();
+			    	editor.putString("username", id);
+			    	editor.putString("password",id+firstName);
+			    	editor.commit();
+					Log.d("Shared", loginPrefs.getString("username", ""));
+					am.createAccount(id, id+firstName, attributes);
 					
 				} catch (SmackException e) {
 					Log.d("XMPP","SmackException@onSessionStateChange");
@@ -309,6 +353,7 @@ public class MainActivity extends ActionBarActivity {
     		}
     	});
     	t.start();
+    	
     }
     
     public void enableActionBar(){
@@ -374,3 +419,5 @@ public class MainActivity extends ActionBarActivity {
     
     
 }
+
+
